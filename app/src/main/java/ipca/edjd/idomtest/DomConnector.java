@@ -13,6 +13,7 @@ public class DomConnector {
 
     public static final String BROADCAST_DOMCONNECTOR_ENERGY = "DomConnector.Energy";
     public static final String DOM_CONNECTOR_DATA = "domconnector.data" ;
+    public static final String BROADCAST_DOMCONNECTOR_SYSTEM_FILE_EVENT ="DomConnector.SystemFileEvent";
 
     String ip;
     int port;
@@ -54,10 +55,10 @@ public class DomConnector {
         iDom3SDK.RegLogFileCB(classPath, "iDomLogFileEvent");
         iDom3SDK.RegObjectDataCB(classPath, "iDomObjectDataEvent");
         iDom3SDK.RegObjectValueCB(classPath, "iDomObjectValueEvent");
-        //iDom3SDK.RegSystemFileCB(classPath, "iDomSystemFileEvent");
-        //iDom3SDK.RegUserFileCB(classPath, "iDomUserFileEvent");
-        //iDom3SDK.RegUserFileInfoCB(classPath, "idomUserFileInfoEvent");
-        //iDom3SDK.RegUserProgramFileCB(classPath, "iDomUserProgramFileEvent");
+        iDom3SDK.RegSystemFileCB(classPath, "iDomSystemFileEvent");
+        iDom3SDK.RegUserFileCB(classPath, "iDomUserFileEvent");
+        iDom3SDK.RegUserFileInfoCB(classPath, "idomUserFileInfoEvent");
+        iDom3SDK.RegUserProgramFileCB(classPath, "iDomUserProgramFileEvent");
 
 
 
@@ -171,11 +172,6 @@ public class DomConnector {
         }
     }
 
-    static void sendBroadcasrDataEventEnergy (Context context, String data){
-        Intent intent = new Intent(BROADCAST_DOMCONNECTOR_ENERGY);
-        intent.putExtra(DOM_CONNECTOR_DATA, data);
-        context.sendBroadcast(intent);
-    }
 
 
     static public void iDomObjectValueEvent(int conid, String idname, int value, boolean is_event)
@@ -189,4 +185,62 @@ public class DomConnector {
                 + " is_event " + is_event
         );
     }
+
+    static public void iDomSystemFileEvent(int conid, String datetime, String filedata, int filesize)
+    {
+        Log.d(DOM_CONNECTOR, "iDomSystemFileEvent " + Integer.toHexString(conid)
+                + " datetime " + datetime
+                + " filedata " + filedata
+                + " filesize " + filesize
+        );
+
+        sendBroadcasrSystemFileEvent(ctx, filedata);
+    }
+
+    static public void iDomUserFileEvent(int conid, int fileID, String filename, String datetime, byte[] filedata, int filesize)
+    {
+        Log.d(DOM_CONNECTOR, "iDomUserFileEvent " + Integer.toHexString(conid)
+                + " fileID " + fileID
+                + " filename " + filename
+                + " datetime " + datetime
+                + " filedata " + filedata.toString()
+                + " filesize " + filesize
+        );
+    }
+
+    static public void idomUserFileInfoEvent(int conid, int fileID, String filename, String datetime, int filesize)
+    {
+        Log.d(DOM_CONNECTOR, "idomUserFileInfoEvent " + Integer.toHexString(conid)
+                + " fileID " + fileID
+                + " filename " + filename
+                + " datetime " + datetime
+                + " filesize " + filesize
+        );
+    }
+
+    static public void iDomUserProgramFileEvent(int conid, String datetime, String filedata, int filesize)
+    {
+        Log.d(DOM_CONNECTOR, "iDomUserProgramFileEvent " + Integer.toHexString(conid)
+                + " datetime " + datetime
+                + " filedata " + filedata.toString()
+                + " filesize " + filesize
+        );
+    }
+
+
+    static void sendBroadcasrDataEventEnergy (Context context, String data){
+        Intent intent = new Intent(BROADCAST_DOMCONNECTOR_ENERGY);
+        intent.putExtra(DOM_CONNECTOR_DATA, data);
+        context.sendBroadcast(intent);
+    }
+
+    static void sendBroadcasrSystemFileEvent (Context context, String file){
+        Intent intent = new Intent(BROADCAST_DOMCONNECTOR_SYSTEM_FILE_EVENT);
+        intent.putExtra(DOM_CONNECTOR_DATA, file);
+        context.sendBroadcast(intent);
+    }
+
+
+
+
 }
