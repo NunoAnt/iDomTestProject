@@ -4,14 +4,11 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.os.Handler;
+import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
-import android.widget.Button;
 import android.widget.TextView;
 
 import org.w3c.dom.Document;
@@ -30,7 +27,12 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
-import domatica.idom.iDom3SDK;
+
+import ipca.edjd.idomtest.Utils.PreferencesHelper;
+import ipca.edjd.idomtest.models.Device;
+import ipca.edjd.idomtest.models.DeviceRepository;
+import ipca.edjd.idomtest.models.Zone;
+import ipca.edjd.idomtest.models.ZoneRepository;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -50,36 +52,91 @@ public class MainActivity extends AppCompatActivity {
                 DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
                 DocumentBuilder dBuilder = null;
                 dBuilder = dbFactory.newDocumentBuilder();
-                Document doc = dBuilder.parse(targetStream);
+                final Document doc = dBuilder.parse(targetStream);
 
                 Element element=doc.getDocumentElement();
                 element.normalize();
 
-                NodeList nList = doc.getElementsByTagName("device");
 
-                for (int i=0; i<nList.getLength(); i++) {
 
-                    Node node = nList.item(i);
-                    if (node.getNodeType() == Node.ELEMENT_NODE) {
-                        Element element2 = (Element) node;
+                new AsyncTask<Void, Void, List<Device>>() {
+                    @Override
+                    protected List<Device> doInBackground(Void... voids) {
 
-                        Device device = new Device();
-                        device.id = element2.getAttribute(Device.DEVICE_ID);
-                        device.idName = element2.getAttribute(Device.DEVICE_IDNAME);
-                        device.name = element2.getAttribute(Device.DEVICE_NAME);
-                        device.zone = element2.getAttribute(Device.DEVICE_ZONE);
+                        NodeList nZoneList = doc.getElementsByTagName("zone");
 
-                        deviceList.add(device);
+                        for (int i=0; i<nZoneList.getLength(); i++) {
+
+                            Node node = nZoneList.item(i);
+                            if (node.getNodeType() == Node.ELEMENT_NODE) {
+                                Element element2 = (Element) node;
+
+                                Zone zone =  new Zone();
+                                zone.id  = element2.getAttribute(Zone.ZONE_ID);
+                                zone.name  = element2.getAttribute(Zone.ZONE_NAME);
+                                zone.path  = element2.getAttribute(Zone.ZONE_PATH);
+                                zone.parent  = element2.getAttribute(Zone.ZONE_PARENT);
+
+                                //Zone.add(zone,realm)
+
+                                Zone z = new ZoneRepository(getApplication()).get(zone.id);
+                                if (z==null)
+                                    new ZoneRepository(getApplication()).insert(zone);
+                            }
+                        }
+
+                        final NodeList nList = doc.getElementsByTagName("device");
+
+
+                        for (int i=0; i<nList.getLength(); i++) {
+
+                            Node node = nList.item(i);
+                            if (node.getNodeType() == Node.ELEMENT_NODE) {
+                                Element element2 = (Element) node;
+
+                                Device device = new Device();
+                                device.id = element2.getAttribute(Device.DEVICE_ID);
+                                device.idName = element2.getAttribute(Device.DEVICE_IDNAME);
+                                device.name = element2.getAttribute(Device.DEVICE_NAME);
+                                device.idZone = element2.getAttribute(Device.DEVICE_ZONE);
+
+                                Device d = new DeviceRepository(getApplication()).get(device.id);
+                                if (d == null)
+                                    new DeviceRepository(getApplication()).insert(device);
+                            }
+                        }
+                        List<Device> devices =  new DeviceRepository(getApplication()).getAll();
+
+                        return devices;
                     }
-                }
 
-                String listdev = "";
+                    @Override
+                    protected void onPostExecute(List<Device> devices) {
+                        super.onPostExecute(devices);
 
-                for (Device d : deviceList){
-                    listdev += d.name + "\n";
-                }
 
-                textViewMain.setText(listdev);
+
+                        String listdev = "";
+
+                        for (Device d : devices){
+                            listdev += d.name + "\n";
+                        }
+
+                        textViewMain.setText(listdev);
+                    }
+                }.execute(null,null,null);
+
+
+
+
+
+/*
+                RealmResults<Device> devices = realm.
+                        where(Device.class).
+                        findAll();
+
+*/
+
 
             } catch (ParserConfigurationException e) {
                 e.printStackTrace();
@@ -120,15 +177,22 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-
+    //Realm realm;
 
     @Override
     public void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_main);
         textViewMain = findViewById(R.id.textViewMain);
-        DomConnector.getInstance("192.168.0.10",3002,this).connect();
+        PreferencesHelper preferencesHelper= new PreferencesHelper(MainActivity.this);
+
+        String ip = preferencesHelper.getIp();
+        int port = preferencesHelper.getPort();
+
+
+        DomConnector.getInstance(ip,port,this).connect();
 
 
     }
@@ -142,15 +206,22 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.menu_temp) {
-
-            iDom3SDK.RequestLogRecords(0, 1000);
-            Intent intent = new Intent(MainActivity.this, TemperatureActivity.class);
-            startActivity(intent);
-            return true;
+        switch (id){
+            case R.id.menu_temp:
+                {
+                //iDom3SDK.RequestLogRecords(0, 1000);
+                Intent intent = new Intent(MainActivity.this, TemperatureActivity.class);
+                startActivity(intent);
+                return true;
+            }
+            case R.id.menu_settings:
+                {
+                Intent intent = new Intent(MainActivity.this, SettingsActivity.class);
+                startActivity(intent);
+                return true;
+            }
         }
+
         return super.onOptionsItemSelected(item);
     }
 }

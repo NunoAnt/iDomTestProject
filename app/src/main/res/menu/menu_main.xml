@@ -4,8 +4,13 @@
 
 
     <item
-        android:id="@+id/menu_temp"
-        android:icon="@android:drawable/btn_star_big_on"
+    android:id="@+id/menu_temp"
+    android:icon="@android:drawable/btn_star_big_on"
+    android:title="Temp"
+    app:showAsAction="ifRoom" />
+    <item
+        android:id="@+id/menu_settings"
+        android:icon="@android:drawable/ic_menu_edit"
         android:title="Temp"
         app:showAsAction="ifRoom" />
 </menu>
