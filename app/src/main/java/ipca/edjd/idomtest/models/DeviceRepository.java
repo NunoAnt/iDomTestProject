@@ -1,6 +1,8 @@
 package ipca.edjd.idomtest.models;
 
 import android.app.Application;
+import android.arch.lifecycle.LiveData;
+import android.content.Context;
 import android.os.AsyncTask;
 import android.widget.Switch;
 
@@ -12,12 +14,12 @@ public class DeviceRepository {
 
     private DeviceDao deviceDao;
 
-    public DeviceRepository(Application application) {
-        AppDatabase db = AppDatabase.getDatabase(application);
+    public DeviceRepository(Context context) {
+        AppDatabase db = AppDatabase.getDatabase(context);
         deviceDao = db.deviceDao();
     }
 
-    public List<Device> getAll(){
+    public LiveData<List<Device>> getAll(){
         return deviceDao.getAll();
     }
 

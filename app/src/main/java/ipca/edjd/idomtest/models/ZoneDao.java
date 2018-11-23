@@ -1,5 +1,6 @@
 package ipca.edjd.idomtest.models;
 
+import android.arch.lifecycle.LiveData;
 import android.arch.persistence.room.Dao;
 import android.arch.persistence.room.Delete;
 import android.arch.persistence.room.Insert;
@@ -12,10 +13,10 @@ import java.util.List;
 public interface ZoneDao {
 
     @Query("SELECT * FROM zone")
-    List<Zone> getAll();
+    LiveData<List<Zone>> getAll();
 
     @Query("SELECT * FROM zone WHERE id IN (:zoneIds)")
-    List<Zone> loadAllByIds(String[] zoneIds);
+    LiveData<List<Zone>> loadAllByIds(String[] zoneIds);
 
     @Query("SELECT * FROM zone WHERE id = :id")
     Zone get(String id);

@@ -1,5 +1,6 @@
 package ipca.edjd.idomtest.models;
 
+import android.arch.lifecycle.LiveData;
 import android.arch.persistence.room.Dao;
 import android.arch.persistence.room.Delete;
 import android.arch.persistence.room.Insert;
@@ -12,10 +13,10 @@ import java.util.List;
 public interface DeviceDao {
 
     @Query("SELECT * FROM device")
-    List<Device> getAll();
+    LiveData<List<Device>> getAll();
 
     @Query("SELECT * FROM device WHERE id IN (:devicesIds)")
-    List<Device> loadAllByIds(String[] devicesIds);
+    LiveData<List<Device>> loadAllByIds(String[] devicesIds);
 
     @Query("SELECT * FROM device WHERE id = :id")
     Device get(String id );

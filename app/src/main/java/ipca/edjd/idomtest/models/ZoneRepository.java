@@ -1,6 +1,8 @@
 package ipca.edjd.idomtest.models;
 
 import android.app.Application;
+import android.arch.lifecycle.LiveData;
+import android.content.Context;
 import android.os.AsyncTask;
 
 import java.util.List;
@@ -11,12 +13,12 @@ public class ZoneRepository {
 
     private ZoneDao zoneDao;
 
-    public ZoneRepository(Application application) {
-        AppDatabase db = AppDatabase.getDatabase(application);
+    public ZoneRepository(Context context) {
+        AppDatabase db = AppDatabase.getDatabase(context);
         zoneDao = db.zoneDao();
     }
 
-    public List<Zone> getAll(){
+    public LiveData<List<Zone>> getAll(){
         return zoneDao.getAll();
     }
 

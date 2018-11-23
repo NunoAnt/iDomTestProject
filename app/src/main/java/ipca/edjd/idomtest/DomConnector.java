@@ -2,10 +2,29 @@ package ipca.edjd.idomtest;
 
 import android.content.Context;
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Handler;
 import android.util.Log;
 
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
+
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+
 import domatica.idom.iDom3SDK;
+import ipca.edjd.idomtest.models.Device;
+import ipca.edjd.idomtest.models.DeviceRepository;
+import ipca.edjd.idomtest.models.Zone;
+import ipca.edjd.idomtest.models.ZoneRepository;
 
 public class DomConnector {
 
@@ -98,7 +117,7 @@ public class DomConnector {
         public void run()
         {
             threadUISync();
-            updateHandler.postDelayed(this, 50);
+            updateHandler.postDelayed(this, 500);
         }
     };
 
@@ -186,7 +205,7 @@ public class DomConnector {
         );
     }
 
-    static public void iDomSystemFileEvent(int conid, String datetime, String filedata, int filesize)
+    static public void iDomSystemFileEvent(int conid, String datetime, final String filedata, int filesize)
     {
         Log.d(DOM_CONNECTOR, "iDomSystemFileEvent " + Integer.toHexString(conid)
                 + " datetime " + datetime
@@ -194,7 +213,81 @@ public class DomConnector {
                 + " filesize " + filesize
         );
 
-        sendBroadcasrSystemFileEvent(ctx, filedata);
+        new AsyncTask<Void,Void,Void>(){
+
+            @Override
+            protected Void doInBackground(Void... voids) {
+                try {
+                    InputStream targetStream = new ByteArrayInputStream(filedata.getBytes());
+                    DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+                    DocumentBuilder dBuilder = null;
+                    dBuilder = dbFactory.newDocumentBuilder();
+                    final Document doc = dBuilder.parse(targetStream);
+
+                    Element element=doc.getDocumentElement();
+                    element.normalize();
+
+
+                    NodeList nZoneList = doc.getElementsByTagName("zone");
+
+                    for (int i=0; i<nZoneList.getLength(); i++) {
+
+                        Node node = nZoneList.item(i);
+                        if (node.getNodeType() == Node.ELEMENT_NODE) {
+                            Element element2 = (Element) node;
+
+                            Zone zone =  new Zone();
+                            zone.id  = element2.getAttribute(Zone.ZONE_ID);
+                            zone.name  = element2.getAttribute(Zone.ZONE_NAME);
+                            zone.path  = element2.getAttribute(Zone.ZONE_PATH);
+                            zone.parent  = element2.getAttribute(Zone.ZONE_PARENT);
+
+                            //Zone.add(zone,realm)
+
+                            Zone z = new ZoneRepository(ctx).get(zone.id);
+                            if (z==null)
+                                new ZoneRepository(ctx).insert(zone);
+                        }
+                    }
+
+                    final NodeList nList = doc.getElementsByTagName("device");
+
+
+                    for (int i=0; i<nList.getLength(); i++) {
+
+                        Node node = nList.item(i);
+                        if (node.getNodeType() == Node.ELEMENT_NODE) {
+                            Element element2 = (Element) node;
+
+                            Device device = new Device();
+                            device.id = element2.getAttribute(Device.DEVICE_ID);
+                            device.idName = element2.getAttribute(Device.DEVICE_IDNAME);
+                            device.name = element2.getAttribute(Device.DEVICE_NAME);
+                            device.idZone = element2.getAttribute(Device.DEVICE_ZONE);
+
+                            Device d = new DeviceRepository(ctx).get(device.id);
+                            if (d == null)
+                                new DeviceRepository(ctx).insert(device);
+                        }
+                    }
+
+
+                } catch (ParserConfigurationException e) {
+                    e.printStackTrace();
+                } catch (SAXException e) {
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                return null;
+            }
+        }.execute(null,null,null);
+
+
+
+
+
+
     }
 
     static public void iDomUserFileEvent(int conid, int fileID, String filename, String datetime, byte[] filedata, int filesize)
@@ -234,11 +327,6 @@ public class DomConnector {
         context.sendBroadcast(intent);
     }
 
-    static void sendBroadcasrSystemFileEvent (Context context, String file){
-        Intent intent = new Intent(BROADCAST_DOMCONNECTOR_SYSTEM_FILE_EVENT);
-        intent.putExtra(DOM_CONNECTOR_DATA, file);
-        context.sendBroadcast(intent);
-    }
 
 
 
