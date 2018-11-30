@@ -11,6 +11,10 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.BaseAdapter;
+import android.widget.ListView;
 import android.widget.TextView;
 
 import org.w3c.dom.Document;
@@ -41,6 +45,8 @@ public class MainActivity extends AppCompatActivity {
 
     List<Device> deviceList =  new ArrayList<>();
 
+    ListView listViewDev;
+    AdapterDevices  adapter;
 
     private static String getValue(String tag, Element element) {
         NodeList nodeList = element.getElementsByTagName(tag).item(0).getChildNodes();
@@ -49,7 +55,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    TextView textViewMain;
 
     @Override
     protected void onResume() {
@@ -69,7 +74,6 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_main);
-        textViewMain = findViewById(R.id.textViewMain);
         PreferencesHelper preferencesHelper= new PreferencesHelper(MainActivity.this);
 
         String ip = preferencesHelper.getIp();
@@ -79,18 +83,18 @@ public class MainActivity extends AppCompatActivity {
         DomConnector.getInstance(ip,port,this).connect();
 
 
-        new DeviceRepository(getApplication()).getAll().observe(MainActivity.this, new Observer<List<Device>>() {
+        new DeviceRepository(getApplication()).getAll()
+                .observe(MainActivity.this, new Observer<List<Device>>() {
             @Override
             public void onChanged(@Nullable List<Device> devices) {
-                String listdev = "";
-
-                for (Device d : devices){
-                    listdev += d.name + "\n";
-                }
-
-                textViewMain.setText(listdev);
+                MainActivity.this.deviceList = devices;
+                adapter.notifyDataSetChanged();
             }
         });
+
+        listViewDev = findViewById(R.id.listView);
+        adapter = new AdapterDevices();
+        listViewDev.setAdapter(adapter);
 
     }
 
@@ -120,5 +124,37 @@ public class MainActivity extends AppCompatActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    class AdapterDevices extends BaseAdapter {
+
+        @Override
+        public int getCount() {
+            return deviceList.size();
+        }
+
+        @Override
+        public Object getItem(int position) {
+            return deviceList.get(position);
+        }
+
+        @Override
+        public long getItemId(int position) {
+            return 0;
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+            if (convertView==null)
+                convertView = getLayoutInflater().inflate(R.layout.row_zone,null);
+
+            TextView textViewName = convertView.findViewById(R.id.textViewName);
+            TextView textViewDescription = convertView.findViewById(R.id.textViewDescription);
+
+            textViewName.setText(deviceList.get(position).name);
+            textViewDescription.setText(deviceList.get(position).idName);
+
+            return convertView;
+        }
     }
 }
