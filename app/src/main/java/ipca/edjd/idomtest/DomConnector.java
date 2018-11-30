@@ -173,7 +173,7 @@ public class DomConnector {
         );
     }
 
-    static public void iDomObjectDataEvent(int conid, String idname, String data, boolean is_event, String datatype, String objecttype)
+    static public void iDomObjectDataEvent(int conid, final String idname, final String data, boolean is_event, String datatype, String objecttype)
     {
         //if (!is_event) return;
         if (idname.matches("SystemClock")) return;
@@ -186,9 +186,26 @@ public class DomConnector {
                 + " objecttype " + objecttype
         );
 
-        if (idname.contains("ProjectoA_A_Sensore_Temperatura")){
-            sendBroadcasrDataEventEnergy(ctx, data);
-        }
+
+        new AsyncTask<Void,Void,Void>(){
+
+            @Override
+            protected Void doInBackground(Void... voids) {
+
+
+                String  idnameStr =  idname.substring(0,idname.indexOf("."));
+
+                if (idnameStr.length()>0) {
+
+                    Device device = new DeviceRepository(ctx).getByIdName(idnameStr);
+                    device.data = Integer.parseInt(data);
+                    new DeviceRepository(ctx).update(device);
+                }
+                return null;
+            }
+        }.execute(null,null,null);
+
+
     }
 
 
@@ -261,9 +278,11 @@ public class DomConnector {
 
                             Device device = new Device();
                             device.id = element2.getAttribute(Device.DEVICE_ID);
-                            device.idName = element2.getAttribute(Device.DEVICE_IDNAME);
+                            device.idname = element2.getAttribute(Device.DEVICE_IDNAME);
                             device.name = element2.getAttribute(Device.DEVICE_NAME);
                             device.idZone = element2.getAttribute(Device.DEVICE_ZONE);
+                            device.devType = element2.getAttribute(Device.DEVICE_TYPE);
+
 
                             Device d = new DeviceRepository(ctx).get(device.id);
                             if (d == null)

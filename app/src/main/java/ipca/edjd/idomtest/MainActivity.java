@@ -14,6 +14,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -126,7 +127,7 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    class AdapterDevices extends BaseAdapter {
+    class AdapterDevices extends BaseAdapter implements View.OnClickListener {
 
         @Override
         public int getCount() {
@@ -152,9 +153,23 @@ public class MainActivity extends AppCompatActivity {
             TextView textViewDescription = convertView.findViewById(R.id.textViewDescription);
 
             textViewName.setText(deviceList.get(position).name);
-            textViewDescription.setText(deviceList.get(position).idName);
+            textViewDescription.setText(""+deviceList.get(position).data);
+
+            convertView.setTag(new Integer(position));
+            convertView.setClickable(true);
+            convertView.setOnClickListener(this);
 
             return convertView;
+        }
+
+        @Override
+        public void onClick(View v) {
+            int position = (int)v.getTag();
+            if (deviceList.get(position).devType.compareTo("Button")==0){
+                Intent intent = new Intent(MainActivity.this, ButtonActivity.class);
+                intent.putExtra("device_idname", deviceList.get(position).idname);
+                startActivity(intent);
+            }
         }
     }
 }

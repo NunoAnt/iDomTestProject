@@ -21,6 +21,11 @@ public interface DeviceDao {
     @Query("SELECT * FROM device WHERE id = :id")
     Device get(String id );
 
+    @Query("SELECT * FROM device WHERE idname = :idname")
+    Device getByIdName(String idname );
+
+    @Query("SELECT * FROM device WHERE idname = :idname")
+    LiveData<Device> getByIdNameLive(String idname );
 
     @Insert
     void insertAll(Device... devices);

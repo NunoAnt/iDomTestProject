@@ -27,6 +27,14 @@ public class DeviceRepository {
         return deviceDao.get(id);
     }
 
+    public Device getByIdName(String id){
+        return deviceDao.getByIdName(id);
+    }
+
+    public LiveData<Device> getByIdNameLive(String id){
+        return deviceDao.getByIdNameLive(id);
+    }
+
     public void insert(Device device){
         new DbAsyncTask(deviceDao, TaskType.INSERT).execute(device);
     }
