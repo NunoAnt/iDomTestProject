@@ -170,6 +170,11 @@ public class MainActivity extends AppCompatActivity {
                 intent.putExtra("device_idname", deviceList.get(position).idname);
                 startActivity(intent);
             }
+            if (deviceList.get(position).devType.compareTo("Temperature Sensor")==0){
+                Intent intent = new Intent(MainActivity.this, TemperatureActivity.class);
+                intent.putExtra("device_idname", deviceList.get(position).idname);
+                startActivity(intent);
+            }
         }
     }
 }

@@ -198,8 +198,10 @@ public class DomConnector {
                 if (idnameStr.length()>0) {
 
                     Device device = new DeviceRepository(ctx).getByIdName(idnameStr);
-                    device.data = Integer.parseInt(data);
-                    new DeviceRepository(ctx).update(device);
+                    if (device != null) {
+                        device.data = Integer.parseInt(data);
+                        new DeviceRepository(ctx).update(device);
+                    }
                 }
                 return null;
             }
@@ -235,6 +237,7 @@ public class DomConnector {
             @Override
             protected Void doInBackground(Void... voids) {
                 try {
+
                     InputStream targetStream = new ByteArrayInputStream(filedata.getBytes());
                     DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
                     DocumentBuilder dBuilder = null;
@@ -244,6 +247,8 @@ public class DomConnector {
                     Element element=doc.getDocumentElement();
                     element.normalize();
 
+                    new DeviceRepository(ctx).deleteAll();
+                    new ZoneRepository(ctx).deleteAll();
 
                     NodeList nZoneList = doc.getElementsByTagName("zone");
 
@@ -301,10 +306,6 @@ public class DomConnector {
                 return null;
             }
         }.execute(null,null,null);
-
-
-
-
 
 
     }

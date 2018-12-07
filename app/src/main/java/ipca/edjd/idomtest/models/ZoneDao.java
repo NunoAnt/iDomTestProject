@@ -21,6 +21,8 @@ public interface ZoneDao {
     @Query("SELECT * FROM zone WHERE id = :id")
     Zone get(String id);
 
+    @Query("DELETE FROM zone")
+    void deleteAll();
 
     @Insert
     void insertAll(Zone... zones);

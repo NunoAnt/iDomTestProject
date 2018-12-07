@@ -38,6 +38,11 @@ public class ZoneRepository {
         new DbAsyncTask(zoneDao, TaskType.DELETE).execute(zone);
     }
 
+    public void deleteAll(){
+        zoneDao.deleteAll();
+    }
+
+
     private class DbAsyncTask extends AsyncTask<Zone, Void, Void> {
 
         private ZoneDao mAsyncTaskDao;

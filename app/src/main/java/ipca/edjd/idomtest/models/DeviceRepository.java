@@ -31,6 +31,10 @@ public class DeviceRepository {
         return deviceDao.getByIdName(id);
     }
 
+    public void deleteAll(){
+         deviceDao.deleteAll();
+    }
+
     public LiveData<Device> getByIdNameLive(String id){
         return deviceDao.getByIdNameLive(id);
     }

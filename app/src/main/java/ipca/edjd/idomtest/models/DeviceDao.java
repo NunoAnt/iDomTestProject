@@ -27,6 +27,9 @@ public interface DeviceDao {
     @Query("SELECT * FROM device WHERE idname = :idname")
     LiveData<Device> getByIdNameLive(String idname );
 
+    @Query("DELETE FROM device")
+    void deleteAll();
+
     @Insert
     void insertAll(Device... devices);
 
